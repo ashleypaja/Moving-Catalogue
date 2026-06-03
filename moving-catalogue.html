@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moving Catalogue</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f9f8f5;
+    --surface: #ffffff;
+    --surface2: #f3f2ee;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text2: #5a5954;
+    --text3: #9a9890;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #18181a;
+      --surface: #222224;
+      --surface2: #2c2c2e;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --text: #f0efe8;
+      --text2: #a0a09a;
+      --text3: #666660;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  header {
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  .add-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .add-card h2 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  input, select {
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  input:focus, select:focus {
+    border-color: #888;
+  }
+
+  #nameInput { flex: 1; min-width: 160px; }
+  #tagInput  { width: 180px; }
+  #locInput  { width: 170px; }
+  #noteInput { width: 160px; }
+
+  button.add-btn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  button.add-btn:hover { opacity: 0.85; }
+
+  .tag-hint {
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.9;
+  }
+
+  .tag-hint code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+
+  .f-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .12s;
+  }
+
+  .f-btn:hover { background: var(--surface2); }
+
+  .f-btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+    font-weight: 500;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 1.75rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem 1rem;
+  }
+
+  .stat-num { font-size: 24px; font-weight: 500; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  .section { margin-bottom: 1.5rem; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .section-header i { font-size: 16px; color: var(--text2); }
+  .section-title { font-size: 13px; font-weight: 500; flex: 1; }
+
+  .count-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--surface2);
+    color: var(--text2);
+    font-weight: 500;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 5px;
+  }
+
+  .item-body { flex: 1; }
+  .item-name { font-size: 13px; color: var(--text); }
+
+  .item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    align-items: center;
+  }
+
+  .chip {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .item-loc {
+    font-size: 11px;
+    color: var(--text3);
+    margin-left: 2px;
+  }
+
+  .item-note {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    padding: 3px 5px;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .del-btn:hover { color: #dc2626; background: #fee2e2; }
+
+  .empty {
+    font-size: 13px;
+    color: var(--text3);
+    padding: 12px 0;
+  }
+
+  .export-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    justify-content: flex-end;
+  }
+
+  .ghost-btn {
+    background: none;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text2);
+    padding: 6px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+  }
+
+  .ghost-btn:hover { background: var(--surface2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>📦 Moving Catalogue</h1>
+    <p>Your two-stage moving plan — stage 1 back to family's, stage 2 abroad</p>
+  </header>
+
+  <div class="add-card">
+    <h2>Add item</h2>
+    <div class="input-row">
+      <input type="text" id="nameInput" placeholder="Item name, e.g. gaming chair" />
+      <input type="text" id="tagInput" placeholder="Tags, e.g. furn daily" />
+      <select id="locInput">
+        <option value="family">📦 family's place</option>
+        <option value="current">🏠 current rental</option>
+      </select>
+      <input type="text" id="noteInput" placeholder="Note (optional)" />
+      <button class="add-btn" onclick="addItem()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+    <div class="tag-hint">
+      <strong>Tags:</strong>
+      <code>furn</code> needs movers &nbsp;
+      <code>daily</code> use often &nbsp;
+      <code>store</code> pack early &nbsp;
+      <code>elec</code> electronics &nbsp;
+      <code>cloth</code> clothing &nbsp;
+      <code>doc</code> documents &nbsp;
+      <code>kit</code> kitchen &nbsp;
+      <code>decor</code> décor &nbsp;
+      <code>sport</code> sport/hobby &nbsp;
+      <code>book</code> books/media &nbsp;
+      <code>tool</code> tools &nbsp;
+      <code>misc</code> misc
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="f-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="f-btn" onclick="setFilter('furn', this)">🪑 Furniture</button>
+    <button class="f-btn" onclick="setFilter('daily', this)">⚡ Daily use</button>
+    <button class="f-btn" onclick="setFilter('store', this)">📦 Store early</button>
+    <button class="f-btn" onclick="setFilter('elec', this)">💻 Electronics</button>
+    <button class="f-btn" onclick="setFilter('family', this)">📍 Family's</button>
+    <button class="f-btn" onclick="setFilter('current', this)">📍 Current rental</button>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="export-bar">
+    <button class="ghost-btn" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+    <button class="ghost-btn" onclick="clearAll()"><i class="ti ti-trash"></i> Clear all</button>
+  </div>
+
+  <div id="catalogue"></div>
+
+</div>
+
+<script>
+const TAG_META = {
+  furn:  { label: 'furniture',   color: '#92400e', bg: '#fef3c7' },
+  daily: { label: 'daily use',   color: '#075985', bg: '#e0f2fe' },
+  store: { label: 'store early', color: '#3f6212', bg: '#ecfccb' },
+  elec:  { label: 'electronics', color: '#5b21b6', bg: '#ede9fe' },
+  cloth: { label: 'clothing',    color: '#9d174d', bg: '#fce7f3' },
+  doc:   { label: 'documents',   color: '#1e40af', bg: '#dbeafe' },
+  kit:   { label: 'kitchen',     color: '#92400e', bg: '#fff7ed' },
+  decor: { label: 'décor',       color: '#86198f', bg: '#fdf4ff' },
+  sport: { label: 'sport/hobby', color: '#065f46', bg: '#d1fae5' },
+  book:  { label: 'books/media', color: '#78350f', bg: '#fef9c3' },
+  tool:  { label: 'tools',       color: '#374151', bg: '#f3f4f6' },
+  misc:  { label: 'misc',        color: '#6b7280', bg: '#f9fafb' },
+};
+
+const SECTIONS = [
+  { key: 'furn',  title: 'Furniture — needs movers',     icon: 'ti-armchair',       filter: i => i.tags.includes('furn') },
+  { key: 'daily', title: 'Daily use — keep accessible',  icon: 'ti-bolt',           filter: i => i.tags.includes('daily') && !i.tags.includes('furn') },
+  { key: 'store', title: 'Store early — rarely needed',  icon: 'ti-archive',        filter: i => i.tags.includes('store') && !i.tags.includes('furn') && !i.tags.includes('daily') },
+  { key: 'elec',  title: 'Electronics & gadgets',        icon: 'ti-device-laptop',  filter: i => i.tags.includes('elec') && !['furn','daily','store'].some(t=>i.tags.includes(t)) },
+  { key: 'cloth', title: 'Clothing',                     icon: 'ti-shirt',          filter: i => i.tags.includes('cloth') },
+  { key: 'doc',   title: 'Documents',                    icon: 'ti-file-text',      filter: i => i.tags.includes('doc') },
+  { key: 'kit',   title: 'Kitchen',                      icon: 'ti-tools-kitchen-2',filter: i => i.tags.includes('kit') },
+  { key: 'other', title: 'Everything else',              icon: 'ti-dots',           filter: i => !Object.keys(TAG_META).filter(t=>t!=='misc').some(t=>i.tags.includes(t)) },
+];
+
+let items = JSON.parse(localStorage.getItem('movingCatalogue') || '[]');
+let filter = 'all';
+
+function save() {
+  localStorage.setItem('movingCatalogue', JSON.stringify(items));
+}
+
+function addItem() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+  const raw = document.getElementById('tagInput').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const tags = raw.filter(t => Object.keys(TAG_META).includes(t));
+  const loc  = document.getElementById('locInput').value;
+  const note = document.getElementById('noteInput').value.trim();
+  items.push({ id: Date.now(), name, tags, loc, note });
+  save();
+  document.getElementById('nameInput').value = '';
+  document.getElementById('tagInput').value  = '';
+  document.getElementById('noteInput').value = '';
+  render();
+}
+
+function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  save();
+  render();
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function getVisible() {
+  if (filter === 'all') return items;
+  if (filter === 'family' || filter === 'current') return items.filter(i => i.loc === filter);
+  return items.filter(i => i.tags.includes(filter));
+}
+
+function renderStats() {
+  const s = document.getElementById('statsRow');
+  s.innerHTML = [
+    [items.length, 'total items'],
+    [items.filter(i=>i.tags.includes('furn')).length, 'need movers'],
+    [items.filter(i=>i.tags.includes('daily')).length, 'keep accessible'],
+    [items.filter(i=>i.tags.includes('store')).length, 'store early'],
+    [items.filter(i=>i.loc==='current').length, 'at rental'],
+  ].map(([n,l]) => `<div class="stat-card"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`).join('');
+}
+
+function renderSection(section, visible) {
+  const sItems = visible.filter(section.filter);
+  if (!sItems.length) return '';
+  const rows = sItems.map(item => {
+    const chips = item.tags.map(t => {
+      const m = TAG_META[t];
+      return m ? `<span class="chip" style="color:${m.color};background:${m.bg}">${m.label}</span>` : '';
+    }).join('');
+    const locStr = item.loc === 'family' ? '📦 family\'s' : '🏠 rental';
+    return `<div class="item-row">
+      <div class="item-body">
+        <div class="item-name">${item.name}</div>
+        <div class="item-meta">${chips}<span class="item-loc">${locStr}</span></div>
+        ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
+      </div>
+      <button class="del-btn" onclick="deleteItem(${item.id})" title="Remove"><i class="ti ti-x"></i></button>
+    </div>`;
+  }).join('');
+  return `<div class="section">
+    <div class="section-header">
+      <i class="ti ${section.icon}"></i>
+      <span class="section-title">${section.title}</span>
+      <span class="count-badge">${sItems.length}</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+function render() {
+  renderStats();
+  const visible = getVisible();
+  const cat = document.getElementById('catalogue');
+  if (!visible.length) {
+    cat.innerHTML = '<div class="empty">No items yet — add your first one above.</div>';
+    return;
+  }
+  cat.innerHTML = SECTIONS.map(s => renderSection(s, visible)).join('');
+}
+
+function exportCSV() {
+  const header = 'Name,Tags,Location,Note';
+  const rows = items.map(i =>
+    `"${i.name}","${i.tags.join(' ')}","${i.loc}","${i.note}"`
+  );
+  const blob = new Blob([header + '\n' + rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'moving-catalogue.csv';
+  a.click();
+}
+
+function clearAll() {
+  if (confirm('Clear all items? This cannot be undone.')) {
+    items = [];
+    save();
+    render();
+  }
+}
+
+document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+document.getElementById('tagInput').addEventListener('keydown',  e => { if (e.key === 'Enter') addItem(); });
+
+render();
+</script>
+</body>
+</html>
