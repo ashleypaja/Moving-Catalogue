@@ -309,41 +309,58 @@
   <div class="add-card">
     <h2>Add item</h2>
     <div class="input-row">
-      <input type="text" id="nameInput" placeholder="Item name, e.g. gaming chair" />
-      <input type="text" id="tagInput" placeholder="Tags, e.g. furn daily" />
-      <select id="locInput">
-        <option value="family">📦 family's place</option>
-        <option value="current">🏠 current rental</option>
-      </select>
-      <input type="text" id="noteInput" placeholder="Note (optional)" />
-      <button class="add-btn" onclick="addItem()"><i class="ti ti-plus"></i> Add</button>
-    </div>
-    <div class="tag-hint">
-      <strong>Tags:</strong>
-      <code>furn</code> needs movers &nbsp;
-      <code>daily</code> use often &nbsp;
-      <code>store</code> pack early &nbsp;
-      <code>elec</code> electronics &nbsp;
-      <code>cloth</code> clothing &nbsp;
-      <code>doc</code> documents &nbsp;
-      <code>kit</code> kitchen &nbsp;
-      <code>decor</code> décor &nbsp;
-      <code>sport</code> sport/hobby &nbsp;
-      <code>book</code> books/media &nbsp;
-      <code>tool</code> tools &nbsp;
-      <code>misc</code> misc
-    </div>
+  <input type="text" id="nameInput" placeholder="Item name" />
+  <select id="typeInput"><option value="">— type —</option></select>
+  <select id="locInput">
+    <option value="current">🏠 current rental</option>
+    <option value="family">📦 family's place</option>
+  </select>
+  <select id="actionInput">
+    <option value="Move">Move</option>
+    <option value="Store">Store</option>
+    <option value="Sell">Sell</option>
+    <option value="Throw away">Throw away</option>
+    <option value="Donate">Donate</option>
+  </select>
+  <select id="destInput">
+    <option value="TW">TW (stay in Taiwan)</option>
+    <option value="AU">AU (going to Australia)</option>
+    <option value="Storage">Storage</option>
+    <option value="Sell">Sell</option>
+    <option value="Discard">Discard</option>
+  </select>
+  <input type="text" id="boxInput" placeholder="Box # (optional)" style="width:110px" />
+  <input type="text" id="noteInput" placeholder="Note (optional)" />
+  <button class="add-btn" onclick="addItem()"><i class="ti ti-plus"></i> Add</button>
+</div>
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+  <button class="ghost-btn" onclick="showAddType()"><i class="ti ti-tag"></i> Add new type</button>
+  <button class="ghost-btn" onclick="showAddDest()"><i class="ti ti-flag"></i> Add new destination</button>
+</div>
+<div id="addTypeForm" style="display:none; margin-top:10px; display:none; gap:8px; flex-wrap:wrap;">
+  <input type="text" id="newTypeKey" placeholder="key (e.g. sport)" style="width:130px" />
+  <input type="text" id="newTypeLabel" placeholder="Label (e.g. Sport)" style="width:130px" />
+  <button class="ghost-btn" onclick="saveNewType()"><i class="ti ti-check"></i> Save type</button>
+  <button class="ghost-btn" onclick="hideAddType()">Cancel</button>
+</div>
+<div id="addDestForm" style="display:none; margin-top:10px; gap:8px; flex-wrap:wrap;">
+  <input type="text" id="newDestVal" placeholder="e.g. EU" style="width:130px" />
+  <button class="ghost-btn" onclick="saveNewDest()"><i class="ti ti-check"></i> Save destination</button>
+  <button class="ghost-btn" onclick="hideAddDest()">Cancel</button>
+</div>
   </div>
 
-  <div class="filter-bar">
-    <button class="f-btn active" onclick="setFilter('all', this)">All</button>
-    <button class="f-btn" onclick="setFilter('furn', this)">🪑 Furniture</button>
-    <button class="f-btn" onclick="setFilter('daily', this)">⚡ Daily use</button>
-    <button class="f-btn" onclick="setFilter('store', this)">📦 Store early</button>
-    <button class="f-btn" onclick="setFilter('elec', this)">💻 Electronics</button>
-    <button class="f-btn" onclick="setFilter('family', this)">📍 Family's</button>
-    <button class="f-btn" onclick="setFilter('current', this)">📍 Current rental</button>
-  </div>
+<div class="filter-bar" id="filterBar">
+  <button class="f-btn active" onclick="setFilter('all', this)">All</button>
+  <button class="f-btn" onclick="setFilter('loc:current', this)">🏠 Rental</button>
+  <button class="f-btn" onclick="setFilter('loc:family', this)">📦 Family's</button>
+  <button class="f-btn" onclick="setFilter('action:Move', this)">Move</button>
+  <button class="f-btn" onclick="setFilter('action:Store', this)">Store</button>
+  <button class="f-btn" onclick="setFilter('action:Sell', this)">Sell</button>
+  <button class="f-btn" onclick="setFilter('dest:AU', this)">→ AU</button>
+  <button class="f-btn" onclick="setFilter('dest:TW', this)">→ TW</button>
+  <button class="f-btn" onclick="setFilter('box', this)">📦 Boxed</button>
+</div>
 
   <div class="stats-row" id="statsRow"></div>
 
@@ -357,58 +374,74 @@
 </div>
 
 <script>
-const TAG_META = {
-  furn:  { label: 'furniture',   color: '#92400e', bg: '#fef3c7' },
-  daily: { label: 'daily use',   color: '#075985', bg: '#e0f2fe' },
-  store: { label: 'store early', color: '#3f6212', bg: '#ecfccb' },
-  elec:  { label: 'electronics', color: '#5b21b6', bg: '#ede9fe' },
-  cloth: { label: 'clothing',    color: '#9d174d', bg: '#fce7f3' },
-  doc:   { label: 'documents',   color: '#1e40af', bg: '#dbeafe' },
-  kit:   { label: 'kitchen',     color: '#92400e', bg: '#fff7ed' },
-  decor: { label: 'décor',       color: '#86198f', bg: '#fdf4ff' },
-  sport: { label: 'sport/hobby', color: '#065f46', bg: '#d1fae5' },
-  book:  { label: 'books/media', color: '#78350f', bg: '#fef9c3' },
-  tool:  { label: 'tools',       color: '#374151', bg: '#f3f4f6' },
-  misc:  { label: 'misc',        color: '#6b7280', bg: '#f9fafb' },
-};
+const COLORS = ['#92400e','#5b21b6','#78350f','#065f46','#075985','#1e40af','#9d174d','#6b7280','#be185d','#0f766e','#b45309','#4d7c0f'];
+const BGS    = ['#fef3c7','#ede9fe','#fef9c3','#d1fae5','#e0f2fe','#dbeafe','#fce7f3','#f3f4f6','#fdf4ff','#ccfbf1','#fff7ed','#ecfccb'];
 
-const SECTIONS = [
-  { key: 'furn',  title: 'Furniture — needs movers',     icon: 'ti-armchair',       filter: i => i.tags.includes('furn') },
-  { key: 'daily', title: 'Daily use — keep accessible',  icon: 'ti-bolt',           filter: i => i.tags.includes('daily') && !i.tags.includes('furn') },
-  { key: 'store', title: 'Store early — rarely needed',  icon: 'ti-archive',        filter: i => i.tags.includes('store') && !i.tags.includes('furn') && !i.tags.includes('daily') },
-  { key: 'elec',  title: 'Electronics & gadgets',        icon: 'ti-device-laptop',  filter: i => i.tags.includes('elec') && !['furn','daily','store'].some(t=>i.tags.includes(t)) },
-  { key: 'cloth', title: 'Clothing',                     icon: 'ti-shirt',          filter: i => i.tags.includes('cloth') },
-  { key: 'doc',   title: 'Documents',                    icon: 'ti-file-text',      filter: i => i.tags.includes('doc') },
-  { key: 'kit',   title: 'Kitchen',                      icon: 'ti-tools-kitchen-2',filter: i => i.tags.includes('kit') },
-  { key: 'other', title: 'Everything else',              icon: 'ti-dots',           filter: i => !Object.keys(TAG_META).filter(t=>t!=='misc').some(t=>i.tags.includes(t)) },
-];
+let tagMeta  = JSON.parse(localStorage.getItem('tagMeta') || JSON.stringify({
+  furn:  { label:'Furniture',   color:'#92400e', bg:'#fef3c7' },
+  anime: { label:'Anime',       color:'#5b21b6', bg:'#ede9fe' },
+  book:  { label:'Books',       color:'#78350f', bg:'#fef9c3' },
+  music: { label:'Music',       color:'#065f46', bg:'#d1fae5' },
+  daily: { label:'Daily Use',   color:'#075985', bg:'#e0f2fe' },
+  elec:  { label:'Electronics', color:'#1e40af', bg:'#dbeafe' },
+  cloth: { label:'Clothing',    color:'#9d174d', bg:'#fce7f3' },
+  misc:  { label:'Misc',        color:'#6b7280', bg:'#f3f4f6' },
+}));
 
-let items = JSON.parse(localStorage.getItem('movingCatalogue') || '[]');
+let sections = JSON.parse(localStorage.getItem('sections') || JSON.stringify([
+  { key:'furn',  title:'Furniture',   icon:'ti-armchair',       tagKey:'furn'  },
+  { key:'anime', title:'Anime',       icon:'ti-sparkles',       tagKey:'anime' },
+  { key:'book',  title:'Books',       icon:'ti-book',           tagKey:'book'  },
+  { key:'music', title:'Music',       icon:'ti-music',          tagKey:'music' },
+  { key:'daily', title:'Daily Use',   icon:'ti-bolt',           tagKey:'daily' },
+  { key:'elec',  title:'Electronics', icon:'ti-device-laptop',  tagKey:'elec'  },
+  { key:'cloth', title:'Clothing',    icon:'ti-shirt',          tagKey:'cloth' },
+  { key:'misc',  title:'Misc',        icon:'ti-dots',           tagKey:'misc'  },
+]));
+
+let destinations = JSON.parse(localStorage.getItem('destinations') || JSON.stringify(['TW','AU','Storage','Sell','Discard']));
+
+let items  = JSON.parse(localStorage.getItem('movingCatalogue') || '[]');
 let filter = 'all';
 
 function save() {
   localStorage.setItem('movingCatalogue', JSON.stringify(items));
+  localStorage.setItem('tagMeta', JSON.stringify(tagMeta));
+  localStorage.setItem('sections', JSON.stringify(sections));
+  localStorage.setItem('destinations', JSON.stringify(destinations));
+}
+
+function populateSelects() {
+  const ts = document.getElementById('typeInput');
+  ts.innerHTML = '<option value="">— type —</option>' +
+    Object.entries(tagMeta).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+  const ds = document.getElementById('destInput');
+  ds.innerHTML = destinations.map(d => `<option value="${d}">${d}</option>`).join('');
 }
 
 function addItem() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) return;
-  const raw = document.getElementById('tagInput').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const tags = raw.filter(t => Object.keys(TAG_META).includes(t));
-  const loc  = document.getElementById('locInput').value;
-  const note = document.getElementById('noteInput').value.trim();
-  items.push({ id: Date.now(), name, tags, loc, note });
+  items.push({
+    id:     Date.now(),
+    name,
+    type:   document.getElementById('typeInput').value,
+    loc:    document.getElementById('locInput').value,
+    action: document.getElementById('actionInput').value,
+    dest:   document.getElementById('destInput').value,
+    box:    document.getElementById('boxInput').value.trim(),
+    note:   document.getElementById('noteInput').value.trim(),
+  });
   save();
   document.getElementById('nameInput').value = '';
-  document.getElementById('tagInput').value  = '';
+  document.getElementById('boxInput').value  = '';
   document.getElementById('noteInput').value = '';
   render();
 }
 
 function deleteItem(id) {
   items = items.filter(i => i.id !== id);
-  save();
-  render();
+  save(); render();
 }
 
 function setFilter(f, btn) {
@@ -420,34 +453,41 @@ function setFilter(f, btn) {
 
 function getVisible() {
   if (filter === 'all') return items;
-  if (filter === 'family' || filter === 'current') return items.filter(i => i.loc === filter);
-  return items.filter(i => i.tags.includes(filter));
+  if (filter.startsWith('loc:'))    return items.filter(i => i.loc    === filter.slice(4));
+  if (filter.startsWith('action:')) return items.filter(i => i.action === filter.slice(7));
+  if (filter.startsWith('dest:'))   return items.filter(i => i.dest   === filter.slice(5));
+  if (filter === 'box')             return items.filter(i => i.box);
+  return items;
 }
 
 function renderStats() {
   const s = document.getElementById('statsRow');
   s.innerHTML = [
-    [items.length, 'total items'],
-    [items.filter(i=>i.tags.includes('furn')).length, 'need movers'],
-    [items.filter(i=>i.tags.includes('daily')).length, 'keep accessible'],
-    [items.filter(i=>i.tags.includes('store')).length, 'store early'],
-    [items.filter(i=>i.loc==='current').length, 'at rental'],
+    [items.length,                                        'total items'],
+    [items.filter(i=>i.loc==='current').length,           'at rental'],
+    [items.filter(i=>i.loc==='family').length,            'at family\'s'],
+    [items.filter(i=>i.action==='Move').length,           'to move'],
+    [items.filter(i=>i.dest==='AU').length,               '→ AU'],
+    [items.filter(i=>i.box).length,                       'boxed'],
   ].map(([n,l]) => `<div class="stat-card"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`).join('');
 }
 
-function renderSection(section, visible) {
-  const sItems = visible.filter(section.filter);
+function renderSection(sec, visible) {
+  const sItems = visible.filter(i => i.type === sec.tagKey);
   if (!sItems.length) return '';
+  const tm = tagMeta[sec.tagKey] || { color:'#6b7280', bg:'#f3f4f6' };
   const rows = sItems.map(item => {
-    const chips = item.tags.map(t => {
-      const m = TAG_META[t];
-      return m ? `<span class="chip" style="color:${m.color};background:${m.bg}">${m.label}</span>` : '';
-    }).join('');
-    const locStr = item.loc === 'family' ? '📦 family\'s' : '🏠 rental';
+    const actionColor = { Move:'#075985', Store:'#3f6212', Sell:'#92400e', 'Throw away':'#991b1b', Donate:'#5b21b6' }[item.action] || '#6b7280';
+    const destColor   = item.dest === 'AU' ? '#065f46' : item.dest === 'TW' ? '#1e40af' : '#6b7280';
     return `<div class="item-row">
       <div class="item-body">
         <div class="item-name">${item.name}</div>
-        <div class="item-meta">${chips}<span class="item-loc">${locStr}</span></div>
+        <div class="item-meta">
+          <span class="chip" style="color:${actionColor};background:${actionColor}18">${item.action}</span>
+          <span class="chip" style="color:${destColor};background:${destColor}18">→ ${item.dest}</span>
+          <span class="item-loc">${item.loc === 'current' ? '🏠 rental' : '📦 family\'s'}</span>
+          ${item.box ? `<span class="chip" style="color:#374151;background:#f3f4f6">📦 Box ${item.box}</span>` : ''}
+        </div>
         ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
       </div>
       <button class="del-btn" onclick="deleteItem(${item.id})" title="Remove"><i class="ti ti-x"></i></button>
@@ -455,48 +495,88 @@ function renderSection(section, visible) {
   }).join('');
   return `<div class="section">
     <div class="section-header">
-      <i class="ti ${section.icon}"></i>
-      <span class="section-title">${section.title}</span>
+      <i class="ti ${sec.icon}" style="color:${tm.color}"></i>
+      <span class="section-title">${sec.title}</span>
       <span class="count-badge">${sItems.length}</span>
+    </div>${rows}
+  </div>`;
+}
+
+function renderUncategorised(visible) {
+  const sItems = visible.filter(i => !i.type || !sections.find(s=>s.tagKey===i.type));
+  if (!sItems.length) return '';
+  const rows = sItems.map(item => `<div class="item-row">
+    <div class="item-body">
+      <div class="item-name">${item.name}</div>
+      <div class="item-meta"><span class="item-loc">${item.loc==='current'?'🏠 rental':'📦 family\'s'}</span></div>
+      ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
     </div>
+    <button class="del-btn" onclick="deleteItem(${item.id})"><i class="ti ti-x"></i></button>
+  </div>`).join('');
+  return `<div class="section">
+    <div class="section-header"><i class="ti ti-question-mark"></i><span class="section-title">Uncategorised</span><span class="count-badge">${sItems.length}</span></div>
     ${rows}
   </div>`;
 }
 
 function render() {
+  populateSelects();
   renderStats();
   const visible = getVisible();
   const cat = document.getElementById('catalogue');
-  if (!visible.length) {
-    cat.innerHTML = '<div class="empty">No items yet — add your first one above.</div>';
-    return;
-  }
-  cat.innerHTML = SECTIONS.map(s => renderSection(s, visible)).join('');
+  if (!visible.length) { cat.innerHTML = '<div class="empty">No items yet.</div>'; return; }
+  cat.innerHTML = sections.map(s => renderSection(s, visible)).join('') + renderUncategorised(visible);
+}
+
+// Add type
+function showAddType() {
+  const f = document.getElementById('addTypeForm');
+  f.style.display = f.style.display === 'flex' ? 'none' : 'flex';
+}
+function hideAddType() { document.getElementById('addTypeForm').style.display = 'none'; }
+function saveNewType() {
+  const key   = document.getElementById('newTypeKey').value.trim().toLowerCase().replace(/\s+/,'_');
+  const label = document.getElementById('newTypeLabel').value.trim();
+  if (!key || !label) return;
+  const idx = Object.keys(tagMeta).length % COLORS.length;
+  tagMeta[key] = { label, color: COLORS[idx], bg: BGS[idx] };
+  sections.push({ key, title: label, icon: 'ti-tag', tagKey: key });
+  save(); hideAddType();
+  document.getElementById('newTypeKey').value   = '';
+  document.getElementById('newTypeLabel').value = '';
+  render();
+}
+
+// Add destination
+function showAddDest() {
+  const f = document.getElementById('addDestForm');
+  f.style.display = f.style.display === 'flex' ? 'none' : 'flex';
+}
+function hideAddDest() { document.getElementById('addDestForm').style.display = 'none'; }
+function saveNewDest() {
+  const val = document.getElementById('newDestVal').value.trim();
+  if (!val || destinations.includes(val)) return;
+  destinations.push(val);
+  save(); hideAddDest();
+  document.getElementById('newDestVal').value = '';
+  render();
 }
 
 function exportCSV() {
-  const header = 'Name,Tags,Location,Note';
+  const header = 'Name,Type,Location,Action,Destination,Box,Note';
   const rows = items.map(i =>
-    `"${i.name}","${i.tags.join(' ')}","${i.loc}","${i.note}"`
+    `"${i.name}","${i.type}","${i.loc}","${i.action}","${i.dest}","${i.box}","${i.note}"`
   );
-  const blob = new Blob([header + '\n' + rows.join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'moving-catalogue.csv';
-  a.click();
+  const blob = new Blob([header+'\n'+rows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'moving-catalogue.csv'; a.click();
 }
 
 function clearAll() {
-  if (confirm('Clear all items? This cannot be undone.')) {
-    items = [];
-    save();
-    render();
-  }
+  if (confirm('Clear all items? This cannot be undone.')) { items=[]; save(); render(); }
 }
 
-document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
-document.getElementById('tagInput').addEventListener('keydown',  e => { if (e.key === 'Enter') addItem(); });
-
+document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') addItem(); });
 render();
 </script>
 </body>
