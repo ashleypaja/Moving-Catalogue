@@ -479,20 +479,64 @@ function renderSection(sec, visible) {
   const rows = sItems.map(item => {
     const actionColor = { Move:'#075985', Store:'#3f6212', Sell:'#92400e', 'Throw away':'#991b1b', Donate:'#5b21b6' }[item.action] || '#6b7280';
     const destColor   = item.dest === 'AU' ? '#065f46' : item.dest === 'TW' ? '#1e40af' : '#6b7280';
-    return `<div class="item-row">
+    const typeOptions = Object.entries(tagMeta).map(([k,v]) => `<option value="${k}" ${item.type===k?'selected':''}>${v.label}</option>`).join('');
+    const actionOptions = ['Move','Store','Sell','Throw away','Donate'].map(a => `<option ${item.action===a?'selected':''}>${a}</option>`).join('');
+    const destOptions = destinations.map(d => `<option ${item.dest===d?'selected':''}>${d}</option>`).join('');
+    return `<div class="item-row" id="row-${item.id}">
       <div class="item-body">
-        <div class="item-name">${item.name}</div>
-        <div class="item-meta">
-          <span class="chip" style="color:${actionColor};background:${actionColor}18">${item.action}</span>
-          <span class="chip" style="color:${destColor};background:${destColor}18">→ ${item.dest}</span>
-          <span class="item-loc">${item.loc === 'current' ? '🏠 rental' : '📦 family\'s'}</span>
-          ${item.box ? `<span class="chip" style="color:#374151;background:#f3f4f6">📦 Box ${item.box}</span>` : ''}
+        <div class="item-view-${item.id}">
+          <div class="item-name">${item.name}</div>
+          <div class="item-meta">
+            <span class="chip" style="color:${actionColor};background:${actionColor}18">${item.action}</span>
+            <span class="chip" style="color:${destColor};background:${destColor}18">→ ${item.dest}</span>
+            <span class="item-loc">${item.loc === 'current' ? '🏠 rental' : '📦 family\'s'}</span>
+            ${item.box ? `<span class="chip" style="color:#374151;background:#f3f4f6">📦 Box ${item.box}</span>` : ''}
+          </div>
+          ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
         </div>
-        ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
+        <div class="item-edit-${item.id}" style="display:none; flex-wrap:wrap; gap:6px; margin-top:6px;">
+          <input type="text" id="edit-name-${item.id}" value="${item.name}" style="flex:1; min-width:120px;" />
+          <select id="edit-type-${item.id}">${typeOptions}</select>
+          <select id="edit-loc-${item.id}">
+            <option value="current" ${item.loc==='current'?'selected':''}>🏠 rental</option>
+            <option value="family"  ${item.loc==='family' ?'selected':''}>📦 family's</option>
+          </select>
+          <select id="edit-action-${item.id}">${actionOptions}</select>
+          <select id="edit-dest-${item.id}">${destOptions}</select>
+          <input type="text" id="edit-box-${item.id}"  value="${item.box||''}"  placeholder="Box #" style="width:80px;" />
+          <input type="text" id="edit-note-${item.id}" value="${item.note||''}" placeholder="Note" style="width:140px;" />
+          <button class="ghost-btn" onclick="saveEdit(${item.id})"><i class="ti ti-check"></i> Save</button>
+          <button class="ghost-btn" onclick="cancelEdit(${item.id})">Cancel</button>
+        </div>
       </div>
-      <button class="del-btn" onclick="deleteItem(${item.id})" title="Remove"><i class="ti ti-x"></i></button>
+      <div style="display:flex; gap:4px;">
+        <button class="del-btn" onclick="startEdit(${item.id})" title="Edit"><i class="ti ti-pencil"></i></button>
+        <button class="del-btn" onclick="deleteItem(${item.id})" title="Remove"><i class="ti ti-x"></i></button>
+      </div>
     </div>`;
-  }).join('');
+  }).join('');function startEdit(id) {
+  document.querySelector(`.item-view-${id}`).style.display = 'none';
+  document.querySelector(`.item-edit-${id}`).style.display = 'flex';
+}
+
+function cancelEdit(id) {
+  document.querySelector(`.item-view-${id}`).style.display = 'block';
+  document.querySelector(`.item-edit-${id}`).style.display = 'none';
+}
+
+function saveEdit(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.name   = document.getElementById(`edit-name-${id}`).value.trim();
+  item.type   = document.getElementById(`edit-type-${id}`).value;
+  item.loc    = document.getElementById(`edit-loc-${id}`).value;
+  item.action = document.getElementById(`edit-action-${id}`).value;
+  item.dest   = document.getElementById(`edit-dest-${id}`).value;
+  item.box    = document.getElementById(`edit-box-${id}`).value.trim();
+  item.note   = document.getElementById(`edit-note-${id}`).value.trim();
+  save();
+  render();
+}
   return `<div class="section">
     <div class="section-header">
       <i class="ti ${sec.icon}" style="color:${tm.color}"></i>
@@ -561,7 +605,29 @@ function saveNewDest() {
   document.getElementById('newDestVal').value = '';
   render();
 }
+function startEdit(id) {
+  document.querySelector(`.item-view-${id}`).style.display = 'none';
+  document.querySelector(`.item-edit-${id}`).style.display = 'flex';
+}
 
+function cancelEdit(id) {
+  document.querySelector(`.item-view-${id}`).style.display = 'block';
+  document.querySelector(`.item-edit-${id}`).style.display = 'none';
+}
+
+function saveEdit(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.name   = document.getElementById(`edit-name-${id}`).value.trim();
+  item.type   = document.getElementById(`edit-type-${id}`).value;
+  item.loc    = document.getElementById(`edit-loc-${id}`).value;
+  item.action = document.getElementById(`edit-action-${id}`).value;
+  item.dest   = document.getElementById(`edit-dest-${id}`).value;
+  item.box    = document.getElementById(`edit-box-${id}`).value.trim();
+  item.note   = document.getElementById(`edit-note-${id}`).value.trim();
+  save();
+  render();
+}
 function exportCSV() {
   const header = 'Name,Type,Location,Action,Destination,Box,Note';
   const rows = items.map(i =>
