@@ -367,7 +367,14 @@
   <button class="f-btn" onclick="setFilter('dest:TW', this)">→ TW</button>
   <button class="f-btn" onclick="setFilter('box', this)">📦 Boxed</button>
 </div>
-
+<div style="display:flex; align-items:center; gap:8px; margin-bottom:1.25rem;">
+  <div style="position:relative; flex:1; max-width:320px;">
+    <i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:14px;"></i>
+    <input type="text" id="searchInput" placeholder="Search items… 搜尋物品" 
+      style="width:100%; padding-left:32px;" oninput="render()" />
+  </div>
+  <button class="ghost-btn" onclick="clearSearch()"><i class="ti ti-x"></i> Clear</button>
+</div>
   <div class="stats-row" id="statsRow"></div>
 
   <div class="export-bar">
@@ -380,6 +387,10 @@
 </div>
 
 <script>
+ function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  render();
+}
 const COLORS = ['#92400e','#5b21b6','#78350f','#065f46','#075985','#1e40af','#9d174d','#6b7280','#be185d','#0f766e','#b45309','#4d7c0f'];
 const BGS    = ['#fef3c7','#ede9fe','#fef9c3','#d1fae5','#e0f2fe','#dbeafe','#fce7f3','#f3f4f6','#fdf4ff','#ccfbf1','#fff7ed','#ecfccb'];
 
@@ -486,16 +497,34 @@ function setFilter(f, btn) {
 }
 
 function getVisible() {
-  if (activeFilters.length === 0) return items;
-  return items.filter(item => {
-    return activeFilters.every(f => {
-      if (f.startsWith('loc:'))    return item.loc    === f.slice(4);
-      if (f.startsWith('action:')) return item.action === f.slice(7);
-      if (f.startsWith('dest:'))   return item.dest   === f.slice(5);
-      if (f === 'box')             return !!item.box;
-      return true;
+  const query = document.getElementById('searchInput')
+    ? document.getElementById('searchInput').value.trim().toLowerCase()
+    : '';
+
+  let result = items;
+
+  // apply filters
+  if (activeFilters.length > 0) {
+    result = result.filter(item => {
+      return activeFilters.every(f => {
+        if (f.startsWith('loc:'))    return item.loc    === f.slice(4);
+        if (f.startsWith('action:')) return item.action === f.slice(7);
+        if (f.startsWith('dest:'))   return item.dest   === f.slice(5);
+        if (f === 'box')             return !!item.box;
+        return true;
+      });
     });
-  });
+  }
+
+  // apply search — matches name and note in any language
+  if (query) {
+    result = result.filter(i =>
+      i.name.toLowerCase().includes(query) ||
+      (i.note && i.note.toLowerCase().includes(query))
+    );
+  }
+
+  return result;
 }
 
 function renderStats() {
